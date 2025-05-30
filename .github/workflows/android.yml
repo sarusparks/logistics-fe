@@ -1,6 +1,6 @@
 name: Build React Native Android App
  
-on:
+on: 
   push:
     branches:
       - master
@@ -14,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ORG_GRADLE_JVMARGS: -Xmx4g  # ✅ Increase heap size for Gradle
+      ORG_GRADLE_JVMARGS: -Xmx4g  
  
     steps:
     # Step 1: Checkout the code
+    # stepsaru
     - name: Checkout code
       uses: actions/checkout@v3
 
