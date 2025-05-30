@@ -26,7 +26,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '17'  # ✅ Ensure compatibility with Android Gradle Plugin
 
     # Step 3: Install Node.js
     - name: Set up Node.js
@@ -45,26 +45,29 @@ jobs:
     # Step 6: Set up Android environment
     - name: Set up Android SDK
       uses: android-actions/setup-android@v2
-      with:
-        api-level: 33
-        build-tools: 33.0.2
-        cache: true
 
-    # 🔧 Step 6.5: Clean Gradle cache (Fix for corrupted .jar files)
-    - name: Clean Gradle cache
-      run: rm -rf ~/.gradle/caches/8.9
+    # Step 6.5: Gradle cleanup to fix corrupt jar issue
+    - name: Stop Gradle daemons
+      run: ./gradlew --stop || true
+      working-directory: android
+
+    - name: Clean all Gradle caches
+      run: rm -rf ~/.gradle/caches ~/.gradle/daemon ~/.gradle/native ~/.gradle/wrapper/dists
+
+    - name: Delete corrupted Gradle distribution
+      run: rm -rf ~/.gradle/wrapper/dists/gradle-8.9-bin
 
     # Step 7: Grant execute permissions to gradlew
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       working-directory: android
 
-    # Step 7.1: Build the Android APK
+    # Step 8: Build the Android APK
     - name: Build APK
       run: ./gradlew assembleRelease
       working-directory: android
 
-    # Step 8: Archive the APK
+    # Step 9: Archive the APK
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
