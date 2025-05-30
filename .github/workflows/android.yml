@@ -18,7 +18,6 @@ jobs:
  
     steps:
     # Step 1: Checkout the code
-    # stepsaru
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -27,13 +26,13 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'  # Use the version compatible with your Android Gradle plugin
+        java-version: '17'  # Match your Gradle/Android build tools
 
     # Step 3: Install Node.js
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18' # Ensure compatibility with your package.json
+        node-version: '18'
 
     # Step 4: Install Yarn
     - name: Install Yarn
@@ -43,28 +42,30 @@ jobs:
     - name: Install dependencies
       run: yarn install
 
-    # Step 6: Set up Android environment
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v2
-      with:
-        api-level: 33  # Adjust based on your app's requirements
-        build-tools: 33.0.2
-        cache: true
+    # Step 6: Set up Android SDK path (only for self-hosted runner)
+    - name: Set ANDROID_HOME and update PATH
+      run: |
+        echo "ANDROID_HOME=$HOME/Android/Sdk" >> $GITHUB_ENV
+        echo "$HOME/Android/Sdk/platform-tools" >> $GITHUB_PATH
+        echo "$HOME/Android/Sdk/emulator" >> $GITHUB_PATH
+        echo "$HOME/Android/Sdk/tools" >> $GITHUB_PATH
+        echo "$HOME/Android/Sdk/tools/bin" >> $GITHUB_PATH
+        echo "$HOME/Android/Sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     # Step 7: Grant execute permissions to gradlew
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       working-directory: android
 
-    # Step 7.1: Build the Android APK
+    # Step 8: Build the Android APK
     - name: Build APK
       run: ./gradlew assembleRelease
       working-directory: android
 
-    # Step 8: Archive the APK
+    # Step 9: Upload the generated APK
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-release.apk
         path: android/app/build/outputs/apk/release/app-release.apk
-        retention-days: 1  # ♻️ Auto-delete after 1 day
+        retention-days: 1
