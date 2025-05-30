@@ -14,63 +14,51 @@ jobs:
     runs-on: self-hosted
 
     env:
-      ORG_GRADLE_JVMARGS: -Xmx4g  # ✅ Increase heap size for Gradle
+      ORG_GRADLE_JVMARGS: -Xmx4g
 
     steps:
-    # Step 1: Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Step 2: Setup Java environment
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'  # ✅ Ensure compatibility with Android Gradle Plugin
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-    # Step 3: Install Node.js
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    # Step 4: Install Yarn
-    - name: Install Yarn
-      run: npm install -g yarn
+      - name: Install Yarn
+        run: npm install -g yarn
 
-    # Step 5: Install project dependencies
-    - name: Install dependencies
-      run: yarn install
+      - name: Install dependencies
+        run: yarn install
 
-    # Step 6: Set up Android environment
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v2
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 33
+          build-tools: 33.0.2
+          cache: true
 
-    # Step 6.5: Gradle cleanup to fix corrupt jar issue
-    - name: Stop Gradle daemons
-      run: ./gradlew --stop || true
-      working-directory: android
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: android
 
-    - name: Clean all Gradle caches
-      run: rm -rf ~/.gradle/caches ~/.gradle/daemon ~/.gradle/native ~/.gradle/wrapper/dists
+      - name: Clean Gradle
+        run: ./gradlew clean
+        working-directory: android
 
-    - name: Delete corrupted Gradle distribution
-      run: rm -rf ~/.gradle/wrapper/dists/gradle-8.9-bin
+      - name: Build APK
+        run: ./gradlew assembleRelease
+        working-directory: android
 
-    # Step 7: Grant execute permissions to gradlew
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      working-directory: android
-
-    # Step 8: Build the Android APK
-    - name: Build APK
-      run: ./gradlew assembleRelease
-      working-directory: android
-
-    # Step 9: Archive the APK
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release.apk
-        path: android/app/build/outputs/apk/release/app-release.apk
-        retention-days: 1
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 1
